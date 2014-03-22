@@ -43,23 +43,26 @@ module Concurrent
 
     let(:remote_actor_class) { MyRemoteActor }
 
-    before { server.pool('foo', MyRemoteActor) }
+    before { server.pool(remote_id, MyRemoteActor) }
 
     context '#start' do
 
-      before { server.run! }
+      before do
+        server.run!
+        subject.run!
+      end
 
       it 'establishes a remote DRb connection' do
         subject.should be_connected
       end
 
       it 'returns true on success' do
-        subject.post('foo').should be_true
+        subject.post(remote_id, 'foo').should be_true
       end
 
       it 'returns false when not running' do
         subject.stop
-        subject.post('foo').should be_false
+        subject.post(remote_id, 'foo').should be_false
       end
 
       it 'sets #last_connection_error on failure' do

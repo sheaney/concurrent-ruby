@@ -32,6 +32,7 @@ module Concurrent
   end
 
   class RemoteActor < Actor
+    extend Forwardable
 
     def initialize(remote_id, opts = {})
       @remote_id = remote_id
@@ -45,6 +46,8 @@ module Concurrent
     def running?
       super && connected?
     end
+
+    alias :ready? :connected?
 
     protected
 
@@ -65,7 +68,7 @@ module Concurrent
       #   so this methods should do the same
       #   which means that a DRb error here should be raised normally
       #   which means my #last_connection_error was probably a completely wrong approach
-      
+
       @proxy.send(@remote_id, *message)
     end
   end

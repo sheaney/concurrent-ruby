@@ -13,8 +13,6 @@ module Concurrent
 
     attr_accessor :actor_pool
 
-    #def_delegator :@dispatcher, :add
-
     def initialize(host = DEFAULT_HOST, port = DEFAULT_PORT)
       @host       = host
       @port       = port
@@ -32,10 +30,6 @@ module Concurrent
     # for clarity we may want to give this a different name
     # it isn't the same method as Actor#post
     def post(name, *args)
-      #return if @actor_pool[name].nil?
-
-      #@actor_pool[name][:actors].post(args)
-
       # this method needs to block and return the result
       #   or communicate the exception back to the caller
       # I'm fairly certain that DRb will catch exceptions, send them back,
