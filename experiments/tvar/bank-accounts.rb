@@ -125,36 +125,45 @@ TRANSFERS = (0..1_000_000).map do
 end
 
 def test(bank_class)
-  (1..8).each do |threads|
-    transfer_per_thread = TRANSFERS.size / threads
-
-    bank = bank_class.new(ACCOUNT_TOTALS)
-    total_before = bank.grand_total
-
-    start_barrier = Concurrent::CountDownLatch.new(threads)
-    finish_barrier = Concurrent::CountDownLatch.new(threads)
-
-    (1..threads).each do |n|
-      Thread.new do
-        start_barrier.count_down
-        start_barrier.wait
-
-        TRANSFERS[(n*transfer_per_thread)..((n+1)*transfer_per_thread)].each do |transfer|
-          bank.transfer(transfer.from, transfer.to, transfer.sum)
-        end
-
-        finish_barrier.count_down
+  30.times do
+    (1..8).each do |threads|
+      3.times do
+        ObjectSpace.garbage_collect
       end
+
+      transfer_per_thread = TRANSFERS.size / threads
+
+      bank = bank_class.new(ACCOUNT_TOTALS)
+      total_before = bank.grand_total
+
+      start_barrier = Concurrent::CountDownLatch.new(threads + 1)
+      finish_barrier = Concurrent::CountDownLatch.new(threads)
+
+      (1..threads).each do |n|
+        Thread.new do
+          start_barrier.count_down
+          start_barrier.wait
+
+          TRANSFERS[(n*transfer_per_thread)..((n+1)*transfer_per_thread)].each do |transfer|
+            bank.transfer(transfer.from, transfer.to, transfer.sum)
+          end
+
+          finish_barrier.count_down
+        end
+      end
+
+      ObjectSpace
+
+      start = Time.now
+      start_barrier.count_down
+      start_barrier.wait
+      finish_barrier.wait
+      time = Time.new - start
+
+      raise "error" unless bank.grand_total == total_before or bank_class == UnsynchronizedBank
+
+      puts "#{bank_class} #{threads} #{time}"
     end
-
-    start = Time.now
-    start_barrier.wait
-    finish_barrier.wait
-    time = Time.new - start
-
-    raise "error" unless bank.grand_total == total_before or bank_class == UnsynchronizedBank
-
-    puts "#{bank_class} #{threads} #{time}"
   end
 end
 
