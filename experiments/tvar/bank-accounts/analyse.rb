@@ -1,4 +1,8 @@
+require 'set'
+
 SAMPLES = {}
+
+THREADS = [2,3,4,5,6,7,8] #Set.new
 
 def read_file(ruby, file)
   File.foreach(file) do |line|
@@ -7,6 +11,7 @@ def read_file(ruby, file)
     if match
       implementation = match[1]
       threads = match[2].to_i
+      #THREADS.add(threads)
       sample = match[3].to_f
 
       tuple = [ruby, implementation, threads]
@@ -23,8 +28,9 @@ def read_file(ruby, file)
   end
 end
 
-read_file("jruby", "bank-accounts-jruby.data")
-read_file("rbx", "bank-accounts-rbx.data")
+read_file("mri", "mri.data")
+read_file("jruby", "jruby.data")
+read_file("rbx", "rbx.data")
 
 def mean(samples)
   samples.inject(&:+) / samples.length
@@ -37,7 +43,7 @@ end
 File.open("implementation-absolute.data", "w") do |file|
   file.write("Threads UnsynchronizedBank CoarseLockBank FineLockBank TransactionalBank\n")
 
-  (2..8).each do |threads|
+  THREADS.each do |threads|
     file.write("#{threads} #{SAMPLES[['jruby', 'UnsynchronizedBank', threads]]} " +
       "#{SAMPLES[['jruby', 'CoarseLockBank', threads]]} " +
       "#{SAMPLES[['jruby', 'FineLockBank', threads]]} " +
@@ -45,15 +51,17 @@ File.open("implementation-absolute.data", "w") do |file|
   end
 end
 
+`gnuplot implementation-absolute.gnuplot`
+
 File.open("implementation-scalability.data", "w") do |file|
   file.write("Threads UnsynchronizedBank CoarseLockBank FineLockBank TransactionalBank\n")
 
-  unsync_baseline = SAMPLES[["jruby", "UnsynchronizedBank", 2]]
-  coarse_baseline = SAMPLES[["jruby", "CoarseLockBank", 2]]
-  fine_baseline = SAMPLES[["jruby", "FineLockBank", 2]]
-  transactional_baseline = SAMPLES[["jruby", "TransactionalBank", 2]]
+  unsync_baseline = SAMPLES[["jruby", "UnsynchronizedBank", THREADS[0]]]
+  coarse_baseline = SAMPLES[["jruby", "CoarseLockBank", THREADS[0]]]
+  fine_baseline = SAMPLES[["jruby", "FineLockBank", THREADS[0]]]
+  transactional_baseline = SAMPLES[["jruby", "TransactionalBank", THREADS[0]]]
 
-  (2..8).each do |threads|
+  THREADS.each do |threads|
     file.write("#{threads} #{unsync_baseline/SAMPLES[['jruby', 'UnsynchronizedBank', threads]]} " +
       "#{coarse_baseline/SAMPLES[['jruby', 'CoarseLockBank', threads]]} " +
       "#{fine_baseline/SAMPLES[['jruby', 'FineLockBank', threads]]} " +
@@ -61,22 +69,32 @@ File.open("implementation-scalability.data", "w") do |file|
   end
 end
 
+`gnuplot implementation-scalability.gnuplot`
+
 File.open("ruby-absolute.data", "w") do |file|
-  file.write("Threads JRuby Rubinius\n")
+  file.write("Threads MRI JRuby Rubinius\n")
 
-
-  (2..8).each do |threads|
-    file.write("#{threads} #{SAMPLES[['jruby', 'TransactionalBank', threads]]} #{SAMPLES[['rbx', 'TransactionalBank', threads]]}\n")
+  THREADS.each do |threads|
+    file.write("#{threads} #{SAMPLES[['mri', 'TransactionalBank', threads]]} " +
+      "#{SAMPLES[['jruby', 'TransactionalBank', threads]]} " +
+      "#{SAMPLES[['rbx', 'TransactionalBank', threads]]}\n")
   end
 end
+
+`gnuplot ruby-absolute.gnuplot`
 
 File.open("ruby-scalability.data", "w") do |file|
-  file.write("Threads JRuby Rubinius\n")
+  file.write("Threads MRI JRuby Rubinius\n")
 
-  jruby_baseline = SAMPLES[["jruby", "TransactionalBank", 2]]
-  rbx_baseline = SAMPLES[["rbx", "TransactionalBank", 2]]
+  mri_baseline = SAMPLES[["mri", "TransactionalBank", THREADS[0]]]
+  jruby_baseline = SAMPLES[["jruby", "TransactionalBank", THREADS[0]]]
+  rbx_baseline = SAMPLES[["rbx", "TransactionalBank", THREADS[0]]]
 
-  (2..8).each do |threads|
-    file.write("#{threads} #{jruby_baseline/SAMPLES[['jruby', 'TransactionalBank', threads]]} #{rbx_baseline/SAMPLES[['rbx', 'TransactionalBank', threads]]}\n")
+  THREADS.each do |threads|
+    file.write("#{threads} #{mri_baseline/SAMPLES[['mri', 'TransactionalBank', threads]]} " +
+      "#{jruby_baseline/SAMPLES[['jruby', 'TransactionalBank', threads]]} " +
+      "#{rbx_baseline/SAMPLES[['rbx', 'TransactionalBank', threads]]}\n")
   end
 end
+
+`gnuplot ruby-scalability.gnuplot`
