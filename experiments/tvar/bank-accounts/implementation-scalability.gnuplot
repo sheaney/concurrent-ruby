@@ -1,7 +1,7 @@
 set terminal pdf enhanced
 set output "implementation-scalability.pdf"
 
-set title "Scalability of Different Bank Account Implementations on JRuby"
+set title "Scalability of Different Bank Account Implementations on JRuby with 75% Writes"
 
 set key left
 

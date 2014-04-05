@@ -1,12 +1,13 @@
 set terminal pdf enhanced
 set output "implementation-write-proportion-scalability.pdf"
 
-set title "Scalability of Different Bank Account Implementations on JRuby Between 2 and 4 Threads for Different Read-Write Workloads"
+set title "Scalability of Different Bank Account Implementations on JRuby Between 1 and 2 Threads for Different Read-Write Workloads"
 
 set style data histogram
 set style histogram cluster gap 1
+set style fill solid 1.0
 
-set key left
+set key right
 
 set xlabel "Proportion of Transactions that Write"
 set ylabel "Scalability (s/s)"

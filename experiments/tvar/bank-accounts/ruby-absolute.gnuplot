@@ -1,9 +1,9 @@
 set terminal pdf enhanced
 set output "ruby-absolute.pdf"
 
-set title "Absolute Time Taken with for TVar Bank Account Implementation for Different Rubies"
+set title "Absolute Time Taken with for TVar Bank Account Implementation for Different Rubies with 75% Writes"
 
-set key left
+set key right
 
 set xlabel "Threads"
 set ylabel "Absolute Time Taken (s)"

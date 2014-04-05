@@ -4,12 +4,12 @@ require_relative 'config'
 
 SAMPLES = {}
 
-SCALABILITY_REFERENCE = 2
+SCALABILITY_REFERENCE = 1
 
-SCALABILITY_A = 2
-SCALABILITY_B = 4
+SCALABILITY_A = 1
+SCALABILITY_B = 2
 
-WORK_PROPORTION = 50
+WORK_PROPORTION = 75
 
 def read_file(ruby, file)
   File.foreach(file) do |line|

@@ -1,7 +1,7 @@
 set terminal pdf enhanced
 set output "ruby-scalability.pdf"
 
-set title "Scalability of TVar Bank Account Implementation for Different Rubies"
+set title "Scalability of TVar Bank Account Implementation for Different Rubies with 75% Writes"
 
 set key left
 

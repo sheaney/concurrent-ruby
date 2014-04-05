@@ -1,9 +1,9 @@
 set terminal pdf enhanced
 set output "implementation-absolute.pdf"
 
-set title "Absolute Time Taken with Different Bank Account Implementations on JRuby"
+set title "Absolute Time Taken with Different Bank Account Implementations on JRuby with 75% Writes"
 
-set key left
+set key right
 
 set xlabel "Threads"
 set ylabel "Absolute Time Taken (s)"
