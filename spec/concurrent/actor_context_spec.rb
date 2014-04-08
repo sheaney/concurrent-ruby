@@ -33,5 +33,12 @@ module Concurrent
         described_class.spawn.should be_a ActorRef
       end
     end
+
+    context '#remote' do
+
+      it 'returns an ActorRef' do
+        described_class.remote.should be_a RemoteActorRef
+      end
+    end
   end
 end

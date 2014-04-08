@@ -22,6 +22,11 @@ module Concurrent
           args = opts.fetch(:args, [])
           Concurrent::SimpleActorRef.new(self.new(*args), opts)
         end
+
+        def remote(opts ={})
+          args = opts.fetch(:args, [])
+          Concurrent::RemoteActorRef.new(self.new(*args), opts)
+        end
       end
     end
   end
