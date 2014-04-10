@@ -18,7 +18,9 @@ module Concurrent
       @abort_on_exception = opts.fetch(:abort_on_exception, true)
       @reset_on_error = opts.fetch(:reset_on_error, true)
       @exception_class = opts.fetch(:rescue_exception, false) ? Exception : StandardError
-      @observers = CopyOnNotifyObserverSet.new
+      observers = CopyOnNotifyObserverSet.new
+
+      @actor.define_singleton_method(:shutdown, &method(:set_stop_event))
     end
 
     def running?
@@ -39,10 +41,10 @@ module Concurrent
       ivar
     end
 
-    def post!(seconds, *msg)
-      raise Concurrent::TimeoutError if seconds == 0
+    def post!(timeout, *msg)
+      raise Concurrent::TimeoutError if timeout == 0
       ivar = self.post(*msg)
-      ivar.value(seconds)
+      ivar.value(timeout)
       if ivar.incomplete?
         raise Concurrent::TimeoutError
       elsif ivar.reason
@@ -62,13 +64,17 @@ module Concurrent
       end
     end
 
-    def join(timeout = nil)
-      @stop_event.wait(timeout)
+    def join(limit = nil)
+      @stop_event.wait(limit)
     end
 
     private
 
     Message = Struct.new(:payload, :ivar, :callback)
+
+    def set_stop_event
+      @stop_event.set
+    end
 
     def supervise
       if @thread.nil?
@@ -95,14 +101,24 @@ module Concurrent
         begin
           result = @actor.receive(*message.payload)
         rescue @exception_class => ex
+          @actor.on_error(Time.now, message.payload, ex)
           @actor.on_reset if @reset_on_error
         ensure
           now = Time.now
           message.ivar.complete(ex.nil?, result, ex)
-          message.callback.call(now, result, ex) if message.callback
+
+          begin
+            message.callback.call(now, result, ex) if message.callback
+          rescue @exception_class => ex
+            # suppress
+          end
+
           observers.notify_observers(now, message.payload, result, ex)
         end
+
+        break if @stop_event.set?
       end
+      @actor.on_shutdown
     end
   end
 end

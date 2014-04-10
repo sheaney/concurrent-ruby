@@ -16,6 +16,8 @@ def shared_actor_test_class
         raise StandardError
       when :bullet
         raise Exception
+      when :stop
+        shutdown
       when :terminate
         Thread.current.kill
       when :sleep
@@ -45,6 +47,13 @@ share_examples_for :actor_ref do
 
     specify do
       subject.shutdown
+      sleep(0.1)
+      subject.should be_shutdown
+    end
+
+    it 'defines a shutdown method on the actor(s)' do
+      subject << :foo
+      subject << :stop
       sleep(0.1)
       subject.should be_shutdown
     end
@@ -114,6 +123,17 @@ share_examples_for :actor_ref do
 
       expected_value.should be_nil
       expected_reason.should be_a StandardError
+    end
+
+    it 'supresses exceptions thrown by the callback' do
+      expected = nil
+      subject.post(:foo){|time, value, reason| raise StandardError }
+      sleep(0.1)
+
+      subject.post(:bar){|time, value, reason| expected = value }
+      sleep(0.1)
+
+      expected.should eq :bar
     end
   end
 
@@ -217,6 +237,24 @@ share_examples_for :actor_ref do
       subject.join
       Time.now.should >= start
       Time.now.should <= start + 0.1
+    end
+  end
+
+  context '#on_error' do
+
+    specify 'is not called on success' do
+      actor = subject.instance_variable_get(:@actor)
+      actor.should_not_receive(:on_error).with(any_args)
+      subject.post(:foo)
+      sleep(0.1)
+    end
+
+    specify 'is called when a message raises an exception' do
+      actor = subject.instance_variable_get(:@actor)
+      actor.should_receive(:on_error).
+        with(anything, [:poison], an_instance_of(StandardError))
+      subject.post(:poison)
+      sleep(0.1)
     end
   end
 

@@ -1,8 +1,6 @@
 # Concurrent Ruby
 [![Gem Version](https://badge.fury.io/rb/concurrent-ruby.png)](http://badge.fury.io/rb/concurrent-ruby) [![Build Status](https://secure.travis-ci.org/jdantonio/concurrent-ruby.png)](https://travis-ci.org/jdantonio/concurrent-ruby?branch=master) [![Coverage Status](https://coveralls.io/repos/jdantonio/concurrent-ruby/badge.png)](https://coveralls.io/r/jdantonio/concurrent-ruby) [![Code Climate](https://codeclimate.com/github/jdantonio/concurrent-ruby.png)](https://codeclimate.com/github/jdantonio/concurrent-ruby) [![Inline docs](http://inch-pages.github.io/github/jdantonio/concurrent-ruby.png)](http://inch-pages.github.io/github/jdantonio/concurrent-ruby) [![Dependency Status](https://gemnasium.com/jdantonio/concurrent-ruby.png)](https://gemnasium.com/jdantonio/concurrent-ruby)
 
-***NOTE:*** *A few API updates in v0.5.0 are not backward-compatible. Please see the [release notes](https://github.com/jdantonio/concurrent-ruby/wiki/API-Updates-in-v0.5.0).*
-
 <table>
 <tr>
 <td align="left" valign="top">
@@ -126,6 +124,7 @@ ibm.value #=> 187.57
 
 ## Contributors
 
+* [Jerry D'Antonio](https://github.com/jdantonio)
 * [Michele Della Torre](https://github.com/mighe)
 * [Chris Seaton](https://github.com/chrisseaton)
 * [Lucas Allan](https://github.com/lucasallan)
@@ -145,8 +144,8 @@ ibm.value #=> 187.57
 
 ## License and Copyright
 
-*Concurrent Ruby* is Copyright &copy; 2014 [Jerry D'Antonio](https://twitter.com/jerrydantonio).
-It is free software released under the [MIT License](http://www.opensource.org/licenses/MIT).
+*Concurrent Ruby* is free software released under the [MIT License](http://www.opensource.org/licenses/MIT).
 
-The *Concurrent Ruby* logo was designed by [David Jones](https://twitter.com/zombyboy).
-It is Copyright &copy; 2014 Jerry D'Antonio. All Rights Reserved.
+The *Concurrent Ruby* [logo](https://github.com/jdantonio/concurrent-ruby/wiki/Logo)
+was designed by [David Jones](https://twitter.com/zombyboy).
+It is Copyright &copy; 2014 [Jerry D'Antonio](https://twitter.com/jerrydantonio). All Rights Reserved.
