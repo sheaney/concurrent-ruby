@@ -92,7 +92,7 @@ module Concurrent
       end
     end
 
-    private
+    protected
 
     # @!visibility private
     def queue # :nodoc:
