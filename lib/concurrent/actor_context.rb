@@ -8,9 +8,9 @@ module Concurrent
   # written about four decades ago, which has led to a serious fragmentation within
   # the actor community. There is *no* universally accepted, strict definition of
   # "actor" and actor implementations differ widely between languages and libraries.
-  # 
+  #
   # A good definition of "actor" is:
-  # 
+  #
   #   An independent, concurrent, single-purpose, computational entity that communicates exclusively via message passing.
   #
   # The actor framework in this library is heavily influenced by the Akka toolkit,
