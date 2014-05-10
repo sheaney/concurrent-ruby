@@ -1,4 +1,5 @@
 require 'concurrent/actor/simple_actor_ref'
+require 'concurrent/actor/remote_actor_ref'
 
 module Concurrent
 
@@ -8,9 +9,9 @@ module Concurrent
   # written about four decades ago, which has led to a serious fragmentation within
   # the actor community. There is *no* universally accepted, strict definition of
   # "actor" and actor implementations differ widely between languages and libraries.
-  # 
+  #
   # A good definition of "actor" is:
-  # 
+  #
   #   An independent, concurrent, single-purpose, computational entity that communicates exclusively via message passing.
   #
   # The actor framework in this library is heavily influenced by the Akka toolkit,
@@ -70,6 +71,11 @@ module Concurrent
         def spawn(opts = {})
           args = opts.fetch(:args, [])
           Concurrent::SimpleActorRef.new(self.new(*args), opts)
+        end
+
+        def remote(opts ={})
+          args = opts.fetch(:args, [])
+          Concurrent::RemoteActorRef.new(self.new(*args), opts)
         end
       end
     end

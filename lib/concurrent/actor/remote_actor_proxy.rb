@@ -4,7 +4,7 @@ require 'drb/drb'
 
 module Concurrent
 
-  class RemoteActorProxy
+  class RemoteActorDrbProxy
 
     DEFAULT_HOST = ActorServer::DEFAULT_HOST
     DEFAULT_PORT = ActorServer::DEFAULT_PORT
@@ -28,6 +28,48 @@ module Concurrent
 
     def send(remote_id, *message)
       @server.post(remote_id, *message) if running?
+    end
+  end
+
+  class RemoteActor < Actor
+    extend Forwardable
+
+    def initialize(remote_id, opts = {})
+      @remote_id = remote_id
+      @proxy = opts.fetch(:proxy, RemoteActorDrbProxy.new(opts))
+    end
+
+    def connected?
+      @proxy.running?
+    end
+
+    def running?
+      super && connected?
+    end
+
+    alias :ready? :connected?
+
+    protected
+
+    def on_run
+      @proxy.start
+    end
+
+    def on_stop
+      @proxy.stop
+    end
+
+    def act(*message)
+      # at this point we have no way of knowing which of the "post" variant methods was called
+      #   we could be here because of #post, #post?, #post!, or #forward
+      # the Actor parent class will handle the method-specific behavior
+      #   this method simply needs to call across the network
+      # this method in a local actor blocks then either returns the result or raises an exception
+      #   so this methods should do the same
+      #   which means that a DRb error here should be raised normally
+      #   which means my #last_connection_error was probably a completely wrong approach
+
+      @proxy.send(@remote_id, *message)
     end
   end
 end
