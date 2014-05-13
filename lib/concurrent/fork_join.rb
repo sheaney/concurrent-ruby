@@ -3,7 +3,8 @@ module Concurrent
   # @!visibility private
   class ForkJoinContext # :nodoc:
 
-    def initialize
+    def initialize(options)
+      @options = options
       @tasks = []
     end
 
@@ -21,7 +22,7 @@ module Concurrent
       parallel_tasks = @tasks.drop(1)
 
       futures = parallel_tasks.map do |block|
-        Future.execute(&block)
+        Future.execute(@options, &block)
       end
 
       [sequential_task.call] + futures.map do |future|
@@ -74,18 +75,18 @@ module Concurrent
   # @return [[Object]] the list of results from the tasks
   #
   # @raise [ArgumentError] if no block is given
-  def join(&block)
+  def join(options = {}, &block)
     raise ArgumentError.new('no block given') unless block_given?
-    builder = ForkJoinContext.new
+    builder = ForkJoinContext.new(options)
     builder.instance_eval(&block)
     builder.join
   end
 
   # Equivalent to `Concurrent::join`, but will produces a single array of values
   # from arrays produced by each fork.
-  def flat_join(&block)
+  def flat_join(options = {}, &block)
     # TOOD(CS): more efficient implementation without temporary arrays
-    join(&block).flatten(1)
+    join(options, &block).flatten(1)
   end
 
   # Equivalent to `Concurrent::join`, but instead of yielding to a block that
@@ -99,7 +100,14 @@ module Concurrent
   #   -> { 2 }
   # ) #=> [1, 2]
   def fork_join(*tasks)
-    builder = ForkJoinContext.new
+    if tasks.first.is_a? Hash
+      options = tasks.first
+      tasks = tasks.drop(1)
+    else
+      options = {}
+    end
+
+    builder = ForkJoinContext.new(options)
 
     tasks.each do |task|
       builder.add_task task
@@ -110,9 +118,9 @@ module Concurrent
 
   # Equivalent to `Concurrent::fork_join`, but will produces a single array of values
   # from arrays produced by each fork.
-  def flat_fork_join(*tasks)
+  def flat_fork_join(*options_tasks)
     # TOOD(CS): more efficient implementation without temporary arrays
-    fork_join(*tasks).flatten(1)
+    fork_join(*options_tasks).flatten(1)
   end
 
   module_function :join, :flat_join, :fork_join, :flat_fork_join

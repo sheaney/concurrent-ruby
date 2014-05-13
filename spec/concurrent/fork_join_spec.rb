@@ -30,6 +30,42 @@ module Concurrent
       end.should == [1, 2, 3]
     end
 
+    let(:executor) { ImmediateExecutor.new }
+
+    it 'uses the executor given with the :executor option' do
+      pending "deadlocks - as if the second fork isn't run"
+
+      executor.should_receive(:post)
+      Concurrent::join(executor: executor) do
+        fork { }
+        fork { }
+      end
+    end
+
+    it 'uses the global operation pool when :operation is true' do
+      Concurrent.configuration.should_receive(:global_operation_pool).and_return(executor)
+      Concurrent::join(operation: true) do
+        fork { }
+        fork { }
+      end
+    end
+
+    it 'uses the global task pool when :task is true' do
+      Concurrent.configuration.should_receive(:global_task_pool).and_return(executor)
+      Concurrent::join(task: true) do
+        fork { }
+        fork { }
+      end
+    end
+
+    it 'uses the global task pool by default' do
+      Concurrent.configuration.should_receive(:global_task_pool).and_return(executor)
+      Concurrent::join do
+        fork { }
+        fork { }
+      end
+    end
+
   end
 
   describe 'flat_join' do
