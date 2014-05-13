@@ -66,4 +66,56 @@ module Concurrent
 
   end
 
+  describe 'fork_join' do
+
+    it 'executes fork tasks and returns when they\'re finished' do
+      n = 0
+
+      Concurrent::fork_join(
+        -> { n += 1 },
+        -> { n += 1 },
+        -> { n += 1 }
+      )
+
+      n.should == 3
+    end
+
+    it 'returns values in order' do
+      Concurrent::fork_join(
+        -> { 1 },
+        -> { 2 },
+        -> { 3 }
+      ).should == [1, 2, 3]
+    end
+
+  end
+
+  describe 'flat_fork_join' do
+
+    it 'flattens returned arrays' do
+      Concurrent::flat_fork_join(
+        -> { [1] },
+        -> { [2, 3] },
+        -> { [4] }
+      ).should == [1, 2, 3, 4]
+    end
+
+    it 'allows non-arrays' do
+      Concurrent::flat_fork_join(
+        -> { 1 },
+        -> { [2, 3] },
+        -> { 4 }
+      ).should == [1, 2, 3, 4]
+    end
+
+    it 'does not flatten beyond one level' do
+      Concurrent::flat_fork_join(
+        -> { 1 },
+        -> { [2, [3, 4]] },
+        -> { 5 }
+      ).should == [1, 2, [3, 4], 5]
+    end
+
+  end
+
 end

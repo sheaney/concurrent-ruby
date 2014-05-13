@@ -4,23 +4,27 @@ module Concurrent
   class ForkJoinContext # :nodoc:
 
     def initialize
-      @blocks = []
+      @tasks = []
     end
 
     def fork(&block)
       raise ArgumentError.new('no block given') unless block_given?
-      @blocks << block
+      add_task(block)
+    end
+
+    def add_task(task)
+      @tasks << task
     end
 
     def join
-      sequential_block = @blocks.first
-      parallel_blocks = @blocks.drop(1)
+      sequential_task = @tasks.first
+      parallel_tasks = @tasks.drop(1)
 
-      futures = parallel_blocks.map do |block|
+      futures = parallel_tasks.map do |block|
         Future.execute(&block)
       end
 
-      [sequential_block.call] + futures.map do |future|
+      [sequential_task.call] + futures.map do |future|
         future.value
       end
     end
@@ -84,6 +88,33 @@ module Concurrent
     join(&block).flatten(1)
   end
 
-  module_function :join, :flat_join
+  # Equivalent to `Concurrent::join`, but instead of yielding to a block that
+  # creates tasks with the `fork` command, accepts an array of tasks that are
+  # procs or lambdas.
+  #
+  # This alternative syntax may be better when your tasks are simple expressions.
+  #
+  # Concurrent::fork_join(
+  #   -> { 1 }
+  #   -> { 2 }
+  # ) #=> [1, 2]
+  def fork_join(*tasks)
+    builder = ForkJoinContext.new
+
+    tasks.each do |task|
+      builder.add_task task
+    end
+
+    builder.join
+  end
+
+  # Equivalent to `Concurrent::fork_join`, but will produces a single array of values
+  # from arrays produced by each fork.
+  def flat_fork_join(*tasks)
+    # TOOD(CS): more efficient implementation without temporary arrays
+    fork_join(*tasks).flatten(1)
+  end
+
+  module_function :join, :flat_join, :fork_join, :flat_fork_join
 
 end
