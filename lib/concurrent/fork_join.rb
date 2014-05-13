@@ -77,6 +77,13 @@ module Concurrent
     builder.join
   end
 
-  module_function :join
+  # Equivalent to `Concurrent::join`, but will produces a single array of values
+  # from arrays produced by each fork.
+  def flat_join(&block)
+    # TOOD(CS): more efficient implementation without temporary arrays
+    join(&block).flatten(1)
+  end
+
+  module_function :join, :flat_join
 
 end

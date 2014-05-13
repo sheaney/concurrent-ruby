@@ -32,4 +32,38 @@ module Concurrent
 
   end
 
+  describe 'flat_join' do
+
+    it 'raises an exception when no block given' do
+      expect {
+        Concurrent::flat_join
+      }.to raise_error(ArgumentError)
+    end
+
+    it 'flattens returned arrays' do
+      Concurrent::flat_join do
+        fork { [1] }
+        fork { [2, 3] }
+        fork { [4] }
+      end.should == [1, 2, 3, 4]
+    end
+
+    it 'allows non-arrays' do
+      Concurrent::flat_join do
+        fork { 1 }
+        fork { [2, 3] }
+        fork { 4 }
+      end.should == [1, 2, 3, 4]
+    end
+
+    it 'does not flatten beyond one level' do
+      Concurrent::flat_join do
+        fork { 1 }
+        fork { [2, [3, 4]] }
+        fork { 5 }
+      end.should == [1, 2, [3, 4], 5]
+    end
+
+  end
+
 end
