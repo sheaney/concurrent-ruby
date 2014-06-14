@@ -1,0 +1,1056 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>
+  Module: Concurrent::Async
+  
+    &mdash; Concurrent
+  
+</title>
+
+  <link rel="stylesheet" href="../css/style.css" type="text/css" charset="utf-8" />
+
+  <link rel="stylesheet" href="../css/common.css" type="text/css" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  hasFrames = window.top.frames.main ? true : false;
+  relpath = '../';
+  framesUrl = "../frames.html#!Concurrent/Async.html";
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="../js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div id="header">
+      <div id="menu">
+  
+    <a href="../_index.html">Index (A)</a> &raquo;
+    <span class='title'><span class='object_link'><a href="../Concurrent.html" title="Concurrent (module)">Concurrent</a></span></span>
+     &raquo; 
+    <span class="title">Async</span>
+  
+
+  <div class="noframes"><span class="title">(</span><a href="." target="_top">no frames</a><span class="title">)</span></div>
+</div>
+
+      <div id="search">
+  
+    <a class="full_list_link" id="class_list_link"
+        href="../class_list.html">
+      Class List
+    </a>
+  
+    <a class="full_list_link" id="method_list_link"
+        href="../method_list.html">
+      Method List
+    </a>
+  
+    <a class="full_list_link" id="file_list_link"
+        href="../file_list.html">
+      File List
+    </a>
+  
+</div>
+      <div class="clear"></div>
+    </div>
+
+    <iframe id="search_frame"></iframe>
+
+    <div id="content"><h1>Module: Concurrent::Async
+  
+  
+  
+</h1>
+
+<dl class="box">
+  
+  
+    
+  
+    
+  
+  
+  
+    <dt class="r1 last">Defined in:</dt>
+    <dd class="r1 last">lib/concurrent/async.rb</dd>
+  
+</dl>
+<div class="clear"></div>
+
+<h2>Overview</h2><div class="docstring">
+  <div class="discussion">
+    
+  <div class="note notetag">
+    <strong>Note:</strong>
+    <div class='inline'><p>This module depends on several internal synchronization objects that
+must be initialized prior to calling any of the async/await/executor methods.
+The best practice is to call <code>init_mutex</code> from within the constructor
+of the including class. A less ideal but acceptable practice is for the
+thread creating the asynchronous object to explicitly call the <code>init_mutex</code>
+method prior to calling any of the async/await/executor methods. If
+<code>init_mutex</code> is <em>not</em> called explicitly the async/await/executor methods
+will raize a <code>Concurrent::InitializationError</code>. This is the only way 
+thread-safe initialization can be guaranteed.</p>
+</div>
+  </div>
+
+  <div class="note notetag">
+    <strong>Note:</strong>
+    <div class='inline'><p>Thread safe guarantees can only be made when asynchronous method calls
+are not mixed with synchronous method calls. Use only synchronous calls
+when the object is used exclusively on a single thread. Use only
+<code>async</code> and <code>await</code> when the object is shared between threads. Once you
+call a method using <code>async</code>, you should no longer call any methods
+directly on the object. Use <code>async</code> and <code>await</code> exclusively from then on.
+With careful programming it is possible to switch back and forth but it&#39;s
+also very easy to create race conditions and break your application.
+Basically, it&#39;s &quot;async all the way down.&quot;</p>
+</div>
+  </div>
+
+<p>A mixin module that provides simple asynchronous behavior to any standard
+class/object or object. </p>
+
+<p>Scenario:
+    As a stateful, plain old Ruby class/object
+    I want safe, asynchronous behavior
+    So my long-running methods don&#39;t block the main thread</p>
+
+<p>Stateful, mutable objects must be managed carefully when used asynchronously.
+But Ruby is an object-oriented language so designing with objects and classes
+plays to Ruby&#39;s strengths and is often more natural to many Ruby programmers.
+The <code>Async</code> module is a way to mix simple yet powerful asynchronous capabilities
+into any plain old Ruby object or class. These capabilities provide a reasonable
+level of thread safe guarantees when used correctly.</p>
+
+<p>When this module is mixed into a class or object it provides to new methods:
+<code>async</code> and <code>await</code>. These methods are thread safe with respect to the enclosing
+object. The former method allows methods to be called asynchronously by posting
+to the global thread pool. The latter allows a method to be called synchronously
+on the current thread but does so safely with respect to any pending asynchronous
+method calls. Both methods return an <code>Obligation</code> which can be inspected for
+the result of the method call. Calling a method with <code>async</code> will return a
+<code>:pending</code> <code>Obligation</code> whereas <code>await</code> will return a <code>:complete</code> <code>Obligation</code>.</p>
+
+<p>Very loosely based on the <code>async</code> and <code>await</code> keywords in C#.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <p class="tag_title">Examples:</p>
+    
+      
+        <p class="example_title"><div class='inline'><p>Defining an asynchronous class</p>
+</div></p>
+      
+      <pre class="example code"><code><span class='kw'>class</span> <span class='const'>Echo</span>
+  <span class='id identifier rubyid_include'>include</span> <span class='const'>Concurrent</span><span class='op'>::</span><span class='const'>Async</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span>
+    <span class='id identifier rubyid_init_mutex'>init_mutex</span> <span class='comment'># initialize the internal synchronization objects
+</span>  <span class='kw'>end</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_echo'>echo</span><span class='lparen'>(</span><span class='id identifier rubyid_msg'>msg</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_sleep'>sleep</span><span class='lparen'>(</span><span class='id identifier rubyid_rand'>rand</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_print'>print</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_msg'>msg</span><span class='embexpr_end'>}</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span>
+    <span class='kw'>nil</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span>
+
+<span class='id identifier rubyid_horn'>horn</span> <span class='op'>=</span> <span class='const'>Echo</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
+<span class='id identifier rubyid_horn'>horn</span><span class='period'>.</span><span class='id identifier rubyid_echo'>echo</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>zero</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span> <span class='comment'># synchronous, not thread-safe
+</span>
+<span class='id identifier rubyid_horn'>horn</span><span class='period'>.</span><span class='id identifier rubyid_async'>async</span><span class='period'>.</span><span class='id identifier rubyid_echo'>echo</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>one</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span> <span class='comment'># asynchronous, non-blocking, thread-safe
+</span><span class='id identifier rubyid_horn'>horn</span><span class='period'>.</span><span class='id identifier rubyid_await'>await</span><span class='period'>.</span><span class='id identifier rubyid_echo'>echo</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>two</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span> <span class='comment'># synchronous, blocking, thread-safe</span></code></pre>
+    
+      
+        <p class="example_title"><div class='inline'><p>Monkey-patching an existing object</p>
+</div></p>
+      
+      <pre class="example code"><code><span class='id identifier rubyid_numbers'>numbers</span> <span class='op'>=</span> <span class='int'>1_000_000</span><span class='period'>.</span><span class='id identifier rubyid_times'>times</span><span class='period'>.</span><span class='id identifier rubyid_collect'>collect</span><span class='lbrace'>{</span> <span class='id identifier rubyid_rand'>rand</span> <span class='rbrace'>}</span>
+<span class='id identifier rubyid_numbers'>numbers</span><span class='period'>.</span><span class='id identifier rubyid_extend'>extend</span><span class='lparen'>(</span><span class='const'>Concurrent</span><span class='op'>::</span><span class='const'>Async</span><span class='rparen'>)</span>
+<span class='id identifier rubyid_numbers'>numbers</span><span class='period'>.</span><span class='id identifier rubyid_init_mutex'>init_mutex</span> <span class='comment'># initialize the internal synchronization objects
+</span>
+<span class='id identifier rubyid_future'>future</span> <span class='op'>=</span> <span class='id identifier rubyid_numbers'>numbers</span><span class='period'>.</span><span class='id identifier rubyid_async'>async</span><span class='period'>.</span><span class='id identifier rubyid_max'>max</span>
+<span class='id identifier rubyid_future'>future</span><span class='period'>.</span><span class='id identifier rubyid_state'>state</span> <span class='comment'>#=&gt; :pending
+</span>
+<span class='id identifier rubyid_sleep'>sleep</span><span class='lparen'>(</span><span class='int'>2</span><span class='rparen'>)</span>
+
+<span class='id identifier rubyid_future'>future</span><span class='period'>.</span><span class='id identifier rubyid_state'>state</span> <span class='comment'>#=&gt; :fulfilled
+</span><span class='id identifier rubyid_future'>future</span><span class='period'>.</span><span class='id identifier rubyid_value'>value</span> <span class='comment'>#=&gt; 0.999999138918843</span></code></pre>
+    
+  </div>
+
+
+  <p class="tag_title">See Also:</p>
+  <ul class="see">
+    
+      <li><span class='object_link'><a href="Obligation.html" title="Concurrent::Obligation (module)">Obligation</a></span></li>
+    
+  </ul>
+<p class="tag_title">Since:</p>
+<ul class="since">
+  
+    <li>
+      
+      
+      
+      
+        
+        <div class='inline'><p>0.6.0</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div>
+
+
+
+
+
+
+  
+    <h2>
+      Class Method Summary
+      <small>(<a href="#" class="summary_toggle">collapse</a>)</small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#validate_argc-class_method" title="validate_argc (class method)">+ (Object) <strong>validate_argc</strong>(obj, method, *args) </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'><p>Check for the presence of a method on an object and determine if a given set of arguments matches the required arity.</p>
+</div></span>
+  
+</li>
+
+      
+    </ul>
+  
+    <h2>
+      Instance Method Summary
+      <small>(<a href="#" class="summary_toggle">collapse</a>)</small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#async-instance_method" title="#async (instance method)">- (Concurrent::Future) <strong>async</strong> </a>
+    
+
+    
+      (also: #future)
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'><p>Causes the chained method call to be performed asynchronously on the global thread pool.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#await-instance_method" title="#await (instance method)">- (Concurrent::IVar) <strong>await</strong> </a>
+    
+
+    
+      (also: #delay)
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'><p>Causes the chained method call to be performed synchronously on the current thread.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#executor%3D-instance_method" title="#executor= (instance method)">- (Object) <strong>executor=</strong>(executor) </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'><p>Set a new executor.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#init_mutex-instance_method" title="#init_mutex (instance method)">- (Object) <strong>init_mutex</strong> </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'><p>Initialize the internal mutex and other synchronization objects.</p>
+</div></span>
+  
+</li>
+
+      
+    </ul>
+  
+
+
+
+  <div id="class_method_details" class="method_details_list">
+    <h2>Class Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="validate_argc-class_method">
+  
+    + (<tt>Object</tt>) <strong>validate_argc</strong>(obj, method, *args) 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+  <div class="note notetag">
+    <strong>Note:</strong>
+    <div class='inline'><p>This check is imperfect because of the way Ruby reports the arity of
+methods with a variable number of arguments. It is possible to determine
+if too few arguments are given but impossible to determine if too many
+arguments are given. This check may also fail to recognize dynamic behavior
+of the object, such as methods simulated with <code>method_missing</code>.</p>
+</div>
+  </div>
+
+<p>Check for the presence of a method on an object and determine if a given
+set of arguments matches the required arity.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>obj</span>
+      
+      
+        <span class='type'>(<tt>Object</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the object to check against</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>args</span>
+      
+      
+        <span class='type'>(<tt>Array</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>zero or more arguments for the arity check</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>method</span>
+      
+      
+        <span class='type'>(<tt>Symbol</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the method to check the object for</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>ArgumentError</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the given <code>args</code> do not match the arity of <code>method</code></p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>NameError</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the object does not respond to <code>method</code> method</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+  <p class="tag_title">See Also:</p>
+  <ul class="see">
+    
+      <li><a href="http://www.ruby-doc.org/core-2.1.0/BasicObject.html#method-i-method_missing" target="_parent" title="BasicObject#method_missing">BasicObject#method_missing</a></li>
+    
+      <li><a href="http://ruby-doc.org/core-2.1.0/Object.html#method-i-respond_to-3F" target="_parent" title="Object#respond_to?">Object#respond_to?</a></li>
+    
+      <li><a href="http://www.ruby-doc.org/core-2.1.1/Method.html#method-i-arity" target="_parent" title="Method#arity">Method#arity</a></li>
+    
+  </ul>
+<p class="tag_title">Since:</p>
+<ul class="since">
+  
+    <li>
+      
+      
+      
+      
+        
+        <div class='inline'><p>0.6.0</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/concurrent/async.rb', line 115</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_validate_argc'>validate_argc</span><span class='lparen'>(</span><span class='id identifier rubyid_obj'>obj</span><span class='comma'>,</span> <span class='id identifier rubyid_method'>method</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_argc'>argc</span> <span class='op'>=</span> <span class='id identifier rubyid_args'>args</span><span class='period'>.</span><span class='id identifier rubyid_length'>length</span>
+  <span class='id identifier rubyid_arity'>arity</span> <span class='op'>=</span> <span class='id identifier rubyid_obj'>obj</span><span class='period'>.</span><span class='id identifier rubyid_method'>method</span><span class='lparen'>(</span><span class='id identifier rubyid_method'>method</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_arity'>arity</span>
+
+  <span class='kw'>if</span> <span class='id identifier rubyid_arity'>arity</span> <span class='op'>&gt;=</span> <span class='int'>0</span> <span class='op'>&amp;&amp;</span> <span class='id identifier rubyid_argc'>argc</span> <span class='op'>!=</span> <span class='id identifier rubyid_arity'>arity</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>wrong number of arguments (</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_argc'>argc</span><span class='embexpr_end'>}</span><span class='tstring_content'> for </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_arity'>arity</span><span class='embexpr_end'>}</span><span class='tstring_content'>)</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+  <span class='kw'>elsif</span> <span class='id identifier rubyid_arity'>arity</span> <span class='op'>&lt;</span> <span class='int'>0</span> <span class='op'>&amp;&amp;</span> <span class='lparen'>(</span><span class='id identifier rubyid_arity'>arity</span> <span class='op'>=</span> <span class='lparen'>(</span><span class='id identifier rubyid_arity'>arity</span> <span class='op'>+</span> <span class='int'>1</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_abs'>abs</span><span class='rparen'>)</span> <span class='op'>&gt;</span> <span class='id identifier rubyid_argc'>argc</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>wrong number of arguments (</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_argc'>argc</span><span class='embexpr_end'>}</span><span class='tstring_content'> for </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_arity'>arity</span><span class='embexpr_end'>}</span><span class='tstring_content'>..*)</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+  <div id="instance_method_details" class="method_details_list">
+    <h2>Instance Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="async-instance_method">
+  
+    - (<tt><span class='object_link'><a href="Future.html" title="Concurrent::Future (class)">Concurrent::Future</a></span></tt>) <strong>async</strong> 
+  
+
+  
+    <span class="aliases">Also known as:
+    <span class="names"><span id='future-instance_method'>future</span></span>
+    </span>
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+  <div class="note notetag">
+    <strong>Note:</strong>
+    <div class='inline'><p>The method call is guaranteed to be thread safe  with respect to
+all other method calls against the same object that are called with
+either <code>async</code> or <code>await</code>. The mutable nature of Ruby references
+(and object orientation in general) prevent any other thread safety
+guarantees. Do NOT mix non-protected method calls with protected
+method call. Use <em>only</em> protected method calls when sharing the object
+between threads.</p>
+</div>
+  </div>
+
+<p>Causes the chained method call to be performed asynchronously on the
+global thread pool. The method called by this method will return a
+<code>Future</code> object in the <code>:pending</code> state and the method call will have
+been scheduled on the global thread pool. The final disposition of the
+method call can be obtained by inspecting the returned <code>Future</code>.</p>
+
+<p>Before scheduling the method on the global thread pool a best-effort
+attempt will be made to validate that the method exists on the object
+and that the given arguments match the arity of the requested function.
+Due to the dynamic nature of Ruby and limitations of its reflection
+library, some edge cases will be missed. For more information see
+the documentation for the <code>validate_argc</code> method.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Future.html" title="Concurrent::Future (class)">Concurrent::Future</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the pending result of the asynchronous operation</p>
+</div>
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Concurrent.html#InitializationError-constant" title="Concurrent::InitializationError (constant)">Concurrent::InitializationError</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p><code>#init_mutex</code> has not been called</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>NameError</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the object does not respond to <code>method</code> method</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>ArgumentError</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the given <code>args</code> do not match the arity of <code>method</code></p>
+</div>
+      
+    </li>
+  
+</ul>
+
+  <p class="tag_title">See Also:</p>
+  <ul class="see">
+    
+      <li><span class='object_link'><a href="Future.html" title="Concurrent::Future (class)">Future</a></span></li>
+    
+  </ul>
+<p class="tag_title">Since:</p>
+<ul class="since">
+  
+    <li>
+      
+      
+      
+      
+        
+        <div class='inline'><p>0.6.0</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+248
+249
+250
+251</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/concurrent/async.rb', line 248</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_async'>async</span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'>InitializationError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>#init_mutex was never called</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span> <span class='kw'>unless</span> <span class='ivar'>@__async__mutex__</span>
+  <span class='ivar'>@__async_delegator__</span><span class='period'>.</span><span class='id identifier rubyid_value'>value</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="await-instance_method">
+  
+    - (<tt><span class='object_link'><a href="IVar.html" title="Concurrent::IVar (class)">Concurrent::IVar</a></span></tt>) <strong>await</strong> 
+  
+
+  
+    <span class="aliases">Also known as:
+    <span class="names"><span id='delay-instance_method'>delay</span></span>
+    </span>
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+  <div class="note notetag">
+    <strong>Note:</strong>
+    <div class='inline'><p>The method call is guaranteed to be thread safe  with respect to
+all other method calls against the same object that are called with
+either <code>async</code> or <code>await</code>. The mutable nature of Ruby references
+(and object orientation in general) prevent any other thread safety
+guarantees. Do NOT mix non-protected method calls with protected
+method call. Use <em>only</em> protected method calls when sharing the object
+between threads.</p>
+</div>
+  </div>
+
+<p>Causes the chained method call to be performed synchronously on the
+current thread. The method called by this method will return an
+<code>IVar</code> object in either the <code>:fulfilled</code> or <code>rejected</code> state and the
+method call will have completed. The final disposition of the
+method call can be obtained by inspecting the returned <code>IVar</code>.</p>
+
+<p>Before scheduling the method on the global thread pool a best-effort
+attempt will be made to validate that the method exists on the object
+and that the given arguments match the arity of the requested function.
+Due to the dynamic nature of Ruby and limitations of its reflection
+library, some edge cases will be missed. For more information see
+the documentation for the <code>validate_argc</code> method.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="IVar.html" title="Concurrent::IVar (class)">Concurrent::IVar</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the completed result of the synchronous operation</p>
+</div>
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Concurrent.html#InitializationError-constant" title="Concurrent::InitializationError (constant)">Concurrent::InitializationError</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p><code>#init_mutex</code> has not been called</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>NameError</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the object does not respond to <code>method</code> method</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>ArgumentError</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the given <code>args</code> do not match the arity of <code>method</code></p>
+</div>
+      
+    </li>
+  
+</ul>
+
+  <p class="tag_title">See Also:</p>
+  <ul class="see">
+    
+      <li><span class='object_link'><a href="IVar.html" title="Concurrent::IVar (class)">IVar</a></span></li>
+    
+  </ul>
+<p class="tag_title">Since:</p>
+<ul class="since">
+  
+    <li>
+      
+      
+      
+      
+        
+        <div class='inline'><p>0.6.0</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+282
+283
+284
+285</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/concurrent/async.rb', line 282</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_await'>await</span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'>InitializationError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>#init_mutex was never called</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span> <span class='kw'>unless</span> <span class='ivar'>@__async__mutex__</span>
+  <span class='ivar'>@__await_delegator__</span><span class='period'>.</span><span class='id identifier rubyid_value'>value</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="executor=-instance_method">
+  
+    - (<tt>Object</tt>) <strong>executor=</strong>(executor) 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    <p>Set a new executor</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Concurrent.html#InitializationError-constant" title="Concurrent::InitializationError (constant)">Concurrent::InitializationError</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p><code>#init_mutex</code> has not been called</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>ArgumentError</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>executor has already been set</p>
+</div>
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Since:</p>
+<ul class="since">
+  
+    <li>
+      
+      
+      
+      
+        
+        <div class='inline'><p>0.6.0</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+292
+293
+294
+295
+296</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/concurrent/async.rb', line 292</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_executor='>executor=</span><span class='lparen'>(</span><span class='id identifier rubyid_executor'>executor</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'>InitializationError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>#init_mutex was never called</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span> <span class='kw'>unless</span> <span class='ivar'>@__async__mutex__</span>
+  <span class='ivar'>@__async__executor__</span><span class='period'>.</span><span class='id identifier rubyid_reconfigure'>reconfigure</span> <span class='lbrace'>{</span> <span class='id identifier rubyid_executor'>executor</span> <span class='rbrace'>}</span> <span class='kw'>or</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>executor has already been set</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="init_mutex-instance_method">
+  
+    - (<tt>Object</tt>) <strong>init_mutex</strong> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+  <div class="note notetag">
+    <strong>Note:</strong>
+    <div class='inline'><p>This method <em>must</em> be called from the constructor of the including
+class or explicitly by the caller prior to calling any other methods.
+This is the only way thread-safe initialization can be guaranteed.</p>
+</div>
+  </div>
+
+<p>Initialize the internal mutex and other synchronization objects. This method
+<em>must</em> be called from the constructor of the including class or explicitly
+by the caller prior to calling any other methods. If <code>init_mutex</code> is <em>not</em>
+called explicitly the async/await/executor methods will raize a
+<code>Concurrent::InitializationError</code>. This is the only way thread-safe
+initialization can be guaranteed.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Concurrent.html#InitializationError-constant" title="Concurrent::InitializationError (constant)">Concurrent::InitializationError</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>when called more than once</p>
+</div>
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Since:</p>
+<ul class="since">
+  
+    <li>
+      
+      
+      
+      
+        
+        <div class='inline'><p>0.6.0</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+310
+311
+312
+313
+314
+315
+316
+317</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/concurrent/async.rb', line 310</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_init_mutex'>init_mutex</span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'>InitializationError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>#init_mutex was already called</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='ivar'>@__async__mutex__</span>
+  <span class='lparen'>(</span><span class='ivar'>@__async__mutex__</span> <span class='op'>=</span> <span class='const'>Mutex</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_lock'>lock</span>
+  <span class='ivar'>@__async__executor__</span> <span class='op'>=</span> <span class='const'>Delay</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lbrace'>{</span> <span class='const'>Concurrent</span><span class='period'>.</span><span class='id identifier rubyid_configuration'>configuration</span><span class='period'>.</span><span class='id identifier rubyid_global_operation_pool'>global_operation_pool</span> <span class='rbrace'>}</span>
+  <span class='ivar'>@__await_delegator__</span> <span class='op'>=</span> <span class='const'>Delay</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lbrace'>{</span> <span class='const'>AwaitDelegator</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='kw'>self</span><span class='comma'>,</span> <span class='ivar'>@__async__mutex__</span><span class='rparen'>)</span> <span class='rbrace'>}</span>
+  <span class='ivar'>@__async_delegator__</span> <span class='op'>=</span> <span class='const'>Delay</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lbrace'>{</span> <span class='const'>AsyncDelegator</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='kw'>self</span><span class='comma'>,</span> <span class='ivar'>@__async__executor__</span><span class='comma'>,</span> <span class='ivar'>@__async__mutex__</span><span class='rparen'>)</span> <span class='rbrace'>}</span>
+  <span class='ivar'>@__async__mutex__</span><span class='period'>.</span><span class='id identifier rubyid_unlock'>unlock</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+</div>
+
+    <div id="footer">
+  Generated on Sat Jun 14 12:36:36 2014 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.8.7.4 (ruby-2.1.0).
+</div>
+
+<script>
+//  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+//    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+//      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+//  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+//
+//  ga('create', 'UA-4005004-8', 'pitr.ch');
+//  ga('send', 'pageview');
+</script>
+
+  </body>
+</html>

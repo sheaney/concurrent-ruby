@@ -1,0 +1,1350 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>
+  Class: Concurrent::Actor
+  
+    &mdash; Concurrent
+  
+</title>
+
+  <link rel="stylesheet" href="../css/style.css" type="text/css" charset="utf-8" />
+
+  <link rel="stylesheet" href="../css/common.css" type="text/css" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  hasFrames = window.top.frames.main ? true : false;
+  relpath = '../';
+  framesUrl = "../frames.html#!Concurrent/Actor.html";
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="../js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div id="header">
+      <div id="menu">
+  
+    <a href="../_index.html">Index (A)</a> &raquo;
+    <span class='title'><span class='object_link'><a href="../Concurrent.html" title="Concurrent (module)">Concurrent</a></span></span>
+     &raquo; 
+    <span class="title">Actor</span>
+  
+
+  <div class="noframes"><span class="title">(</span><a href="." target="_top">no frames</a><span class="title">)</span></div>
+</div>
+
+      <div id="search">
+  
+    <a class="full_list_link" id="class_list_link"
+        href="../class_list.html">
+      Class List
+    </a>
+  
+    <a class="full_list_link" id="method_list_link"
+        href="../method_list.html">
+      Method List
+    </a>
+  
+    <a class="full_list_link" id="file_list_link"
+        href="../file_list.html">
+      File List
+    </a>
+  
+</div>
+      <div class="clear"></div>
+    </div>
+
+    <iframe id="search_frame"></iframe>
+
+    <div id="content"><h1>Class: Concurrent::Actor
+  
+  <span class="deprecated note title">Deprecated</span>
+  
+</h1>
+
+<dl class="box">
+  
+    <dt class="r1">Inherits:</dt>
+    <dd class="r1">
+      <span class="inheritName">Object</span>
+      
+        <ul class="fullTree">
+          <li>Object</li>
+          
+            <li class="next">Concurrent::Actor</li>
+          
+        </ul>
+        <a href="#" class="inheritanceTree">show all</a>
+      
+      </dd>
+    
+  
+  
+    
+  
+    
+      <dt class="r2">Includes:</dt>
+      <dd class="r2"><span class='object_link'><a href="Postable.html" title="Concurrent::Postable (module)">Postable</a></span>, <span class='object_link'><a href="Runnable.html" title="Concurrent::Runnable (module)">Runnable</a></span>, Observable</dd>
+      
+    
+  
+  
+  
+    <dt class="r1 last">Defined in:</dt>
+    <dd class="r1 last">lib/concurrent/actor/actor.rb</dd>
+  
+</dl>
+<div class="clear"></div>
+
+<h2>Overview</h2><div class="docstring">
+  <div class="discussion">
+    <div class="note deprecated"><strong>Deprecated.</strong> <div class='inline'><p>+Actor+ is being replaced with a completely new framework prior to v1.0.0</p>
+</div></div>
+<p>Actor-based concurrency is all the rage in some circles. Originally described in
+1973, the actor model is a paradigm for creating asynchronous, concurrent objects
+that is becoming increasingly popular. Much has changed since actors were first
+written about four decades ago, which has led to a serious fragmentation within
+the actor community. There is <em>no</em> universally accepted, strict definition of
+&quot;actor&quot; and actor implementations differ widely between languages and libraries.</p>
+
+<p>A good definition of &quot;actor&quot; is:</p>
+
+<p>An independent, concurrent, single-purpose, computational entity that communicates exclusively via message passing.</p>
+
+<p>The +Concurrent::Actor+ class in this library is based solely on the
+<a href="http://www.scala-lang.org/api/current/index.html#scala.actors.Actor" target="_parent" title="Actor">Actor</a> trait
+defined in the Scala standard library. It does not implement all the features of
+Scala&#39;s +Actor+ but its behavior for what <em>has</em> been implemented is nearly identical.
+The excluded features mostly deal with Scala&#39;s message semantics, strong typing,
+and other characteristics of Scala that don&#39;t really apply to Ruby.</p>
+
+<p>Unlike many of the abstractions in this library, +Actor+ takes an <em>object-oriented</em>
+approach to asynchronous concurrency, rather than a <em>functional programming</em>
+approach.</p>
+
+<p>Because +Actor+ mixes in the +Concurrent::Runnable+ module subclasses have access to
+the +#on_error+ method and can override it to implement custom error handling. The
++Actor+ base class does not use +#on_error+ so as to avoid conflit with subclasses
+which override it. Generally speaking, +#on_error+ should not be used. The +Actor+
+base class provides concictent, reliable, and robust error handling already, and
+error handling specifics are tied to the message posting method. Incorrect behavior
+in an +#on_error+ override can lead to inconsistent +Actor+ behavior that may lead
+to confusion and difficult debugging.</p>
+
+<p>The +Actor+ superclass mixes in the Ruby standard library
+<a href="http://ruby-doc.org/stdlib-2.0/libdoc/observer/rdoc/Observable.html" target="_parent" title="Observable">Observable</a>
+module to provide consistent callbacks upon message processing completion. The normal
++Observable+ methods, including +#add_observer+ behave normally. Once an observer
+is added to an +Actor+ it will be notified of all messages processed <em>after</em>
+addition. Notification will <em>not</em> occur for any messages that have already been
+processed.</p>
+
+<p>Observers will be notified regardless of whether the message processing is successful
+or not. The +#update+ method of the observer will receive four arguments. The
+appropriate method signature is:</p>
+
+<p>def update(time, message, result, reason)</p>
+
+<p>These four arguments represent:</p>
+
+<ul>
+<li>The time that message processing was completed</li>
+<li>An array containing all elements of the original message, in order</li>
+<li>The result of the call to +#act+ (will be +nil+ if an exception was raised)</li>
+<li>Any exception raised by +#act+ (or +nil+ if message processing was successful)</li>
+</ul>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <p class="tag_title">Examples:</p>
+    
+      
+        <p class="example_title"><div class='inline'><p>Actor Ping Pong</p>
+</div></p>
+      
+      <pre class="example code"><code><span class='kw'>class</span> <span class='const'>Ping</span> <span class='op'>&lt;</span> <span class='const'>Concurrent</span><span class='op'>::</span><span class='const'>Actor</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='id identifier rubyid_count'>count</span><span class='comma'>,</span> <span class='id identifier rubyid_pong'>pong</span><span class='rparen'>)</span>
+    <span class='kw'>super</span><span class='lparen'>(</span><span class='rparen'>)</span>
+    <span class='ivar'>@pong</span> <span class='op'>=</span> <span class='id identifier rubyid_pong'>pong</span>
+    <span class='ivar'>@remaining</span> <span class='op'>=</span> <span class='id identifier rubyid_count'>count</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_act'>act</span><span class='lparen'>(</span><span class='id identifier rubyid_msg'>msg</span><span class='rparen'>)</span>
+
+    <span class='kw'>if</span> <span class='id identifier rubyid_msg'>msg</span> <span class='op'>==</span> <span class='symbol'>:pong</span>
+      <span class='id identifier rubyid_print'>print</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Ping: pong\n</span><span class='tstring_end'>&quot;</span></span> <span class='kw'>if</span> <span class='ivar'>@remaining</span> <span class='op'>%</span> <span class='int'>1000</span> <span class='op'>==</span> <span class='int'>0</span>
+      <span class='ivar'>@pong</span><span class='period'>.</span><span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='symbol'>:ping</span><span class='rparen'>)</span>
+
+      <span class='kw'>if</span> <span class='ivar'>@remaining</span> <span class='op'>&gt;</span> <span class='int'>0</span>
+        <span class='ivar'>@pong</span> <span class='op'>&lt;&lt;</span> <span class='symbol'>:ping</span>
+        <span class='ivar'>@remaining</span> <span class='op'>-=</span> <span class='int'>1</span>
+      <span class='kw'>else</span>
+        <span class='id identifier rubyid_print'>print</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Ping :stop\n</span><span class='tstring_end'>&quot;</span></span>
+        <span class='ivar'>@pong</span> <span class='op'>&lt;&lt;</span> <span class='symbol'>:stop</span>
+        <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_stop'>stop</span>
+      <span class='kw'>end</span>
+    <span class='kw'>end</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span>
+
+<span class='kw'>class</span> <span class='const'>Pong</span> <span class='op'>&lt;</span> <span class='const'>Concurrent</span><span class='op'>::</span><span class='const'>Actor</span>
+
+  <span class='id identifier rubyid_attr_writer'>attr_writer</span> <span class='symbol'>:ping</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span>
+    <span class='kw'>super</span><span class='lparen'>(</span><span class='rparen'>)</span>
+    <span class='ivar'>@count</span> <span class='op'>=</span> <span class='int'>0</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_act'>act</span><span class='lparen'>(</span><span class='id identifier rubyid_msg'>msg</span><span class='rparen'>)</span>
+
+    <span class='kw'>if</span> <span class='id identifier rubyid_msg'>msg</span> <span class='op'>==</span> <span class='symbol'>:ping</span>
+      <span class='id identifier rubyid_print'>print</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Pong: ping\n</span><span class='tstring_end'>&quot;</span></span> <span class='kw'>if</span> <span class='ivar'>@count</span> <span class='op'>%</span> <span class='int'>1000</span> <span class='op'>==</span> <span class='int'>0</span>
+      <span class='ivar'>@ping</span> <span class='op'>&lt;&lt;</span> <span class='symbol'>:pong</span>
+      <span class='ivar'>@count</span> <span class='op'>+=</span> <span class='int'>1</span>
+
+    <span class='kw'>elsif</span> <span class='id identifier rubyid_msg'>msg</span> <span class='op'>==</span> <span class='symbol'>:stop</span>
+      <span class='id identifier rubyid_print'>print</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Pong :stop\n</span><span class='tstring_end'>&quot;</span></span>
+      <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_stop'>stop</span>
+    <span class='kw'>end</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span>
+
+<span class='id identifier rubyid_pong'>pong</span> <span class='op'>=</span> <span class='const'>Pong</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
+<span class='id identifier rubyid_ping'>ping</span> <span class='op'>=</span> <span class='const'>Ping</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='int'>10000</span><span class='comma'>,</span> <span class='id identifier rubyid_pong'>pong</span><span class='rparen'>)</span>
+<span class='id identifier rubyid_pong'>pong</span><span class='period'>.</span><span class='id identifier rubyid_ping'>ping</span> <span class='op'>=</span> <span class='id identifier rubyid_ping'>ping</span>
+
+<span class='id identifier rubyid_t1'>t1</span> <span class='op'>=</span> <span class='id identifier rubyid_ping'>ping</span><span class='period'>.</span><span class='id identifier rubyid_run!'>run!</span>
+<span class='id identifier rubyid_t2'>t2</span> <span class='op'>=</span> <span class='id identifier rubyid_pong'>pong</span><span class='period'>.</span><span class='id identifier rubyid_run!'>run!</span>
+
+<span class='id identifier rubyid_ping'>ping</span> <span class='op'>&lt;&lt;</span> <span class='symbol'>:pong</span></code></pre>
+    
+  </div>
+
+
+  <p class="tag_title">See Also:</p>
+  <ul class="see">
+    
+      <li><a href="http://ruby-doc.org/stdlib-2.0/libdoc/observer/rdoc/Observable.html" target="_parent" title="http://ruby-doc.org/stdlib-2.0/libdoc/observer/rdoc/Observable.html">http://ruby-doc.org/stdlib-2.0/libdoc/observer/rdoc/Observable.html</a></li>
+    
+  </ul>
+
+</div>
+
+
+
+
+
+
+  
+    <h2>
+      Class Method Summary
+      <small>(<a href="#" class="summary_toggle">collapse</a>)</small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public deprecated">
+  <span class="summary_signature">
+    
+      <a href="#pool-class_method" title="pool (class method)">+ (Array) <strong>pool</strong>(count, *args, &amp;block) </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  <span class="deprecated note title">deprecated</span>
+  
+
+  
+    <span class="summary_desc"><strong>Deprecated.</strong> <div class='inline'><p>+Actor+ is being replaced with a completely new framework prior to v1.0.0</p>
+</div></span>
+  
+</li>
+
+      
+    </ul>
+  
+    <h2>
+      Instance Method Summary
+      <small>(<a href="#" class="summary_toggle">collapse</a>)</small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#%3C%3C-instance_method" title="#&lt;&lt; (instance method)">- (Object) <strong>&lt;&lt;</strong>(message) </a>
+    
+
+    
+  </span>
+  
+    <span class="note title not_defined_here">
+      included
+      from <span class='object_link'><a href="Postable.html#%3C%3C-instance_method" title="Concurrent::Postable#&lt;&lt; (method)">Postable</a></span>
+    </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public deprecated">
+  <span class="summary_signature">
+    
+      <a href="#act-instance_method" title="#act (instance method)">- (Object) <strong>act</strong>(*message) </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  <span class="deprecated note title">deprecated</span>
+  
+
+  
+    <span class="summary_desc"><strong>Deprecated.</strong> <div class='inline'><p>+Actor+ is being replaced with a completely new framework prior to v1.0.0</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public deprecated">
+  <span class="summary_signature">
+    
+      <a href="#forward-instance_method" title="#forward (instance method)">- (Object) <strong>forward</strong>(receiver, *message) </a>
+    
+
+    
+  </span>
+  
+    <span class="note title not_defined_here">
+      included
+      from <span class='object_link'><a href="Postable.html#forward-instance_method" title="Concurrent::Postable#forward (method)">Postable</a></span>
+    </span>
+  
+  
+  
+  
+  
+  <span class="deprecated note title">deprecated</span>
+  
+
+  
+    <span class="summary_desc"><strong>Deprecated.</strong> <div class='inline'><p>+Actor+ is being replaced with a completely new framework prior to v1.0.0</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="protected ">
+  <span class="summary_signature">
+    
+      <a href="#mutex-instance_method" title="#mutex (instance method)">- (Object) <strong>mutex</strong> </a>
+    
+
+    
+  </span>
+  
+    <span class="note title not_defined_here">
+      included
+      from <span class='object_link'><a href="Runnable.html#mutex-instance_method" title="Concurrent::Runnable#mutex (method)">Runnable</a></span>
+    </span>
+  
+  
+  
+  <span class="note title protected">protected</span>
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#post-instance_method" title="#post (instance method)">- (Object) <strong>post</strong>(*message) </a>
+    
+
+    
+  </span>
+  
+    <span class="note title not_defined_here">
+      included
+      from <span class='object_link'><a href="Postable.html#post-instance_method" title="Concurrent::Postable#post (method)">Postable</a></span>
+    </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'><p>Sends a message to and returns.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#post%21-instance_method" title="#post! (instance method)">- (Object) <strong>post!</strong>(seconds, *message) </a>
+    
+
+    
+  </span>
+  
+    <span class="note title not_defined_here">
+      included
+      from <span class='object_link'><a href="Postable.html#post%21-instance_method" title="Concurrent::Postable#post! (method)">Postable</a></span>
+    </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#post%3F-instance_method" title="#post? (instance method)">- (Boolean) <strong>post?</strong>(*message) </a>
+    
+
+    
+  </span>
+  
+    <span class="note title not_defined_here">
+      included
+      from <span class='object_link'><a href="Postable.html#post%3F-instance_method" title="Concurrent::Postable#post? (method)">Postable</a></span>
+    </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public deprecated">
+  <span class="summary_signature">
+    
+      <a href="#ready%3F-instance_method" title="#ready? (instance method)">- (Boolean) <strong>ready?</strong> </a>
+    
+
+    
+  </span>
+  
+    <span class="note title not_defined_here">
+      included
+      from <span class='object_link'><a href="Postable.html#ready%3F-instance_method" title="Concurrent::Postable#ready? (method)">Postable</a></span>
+    </span>
+  
+  
+  
+  
+  
+  <span class="deprecated note title">deprecated</span>
+  
+
+  
+    <span class="summary_desc"><strong>Deprecated.</strong> <div class='inline'><p>+Actor+ is being replaced with a completely new framework prior to v1.0.0</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#run-instance_method" title="#run (instance method)">- (Object) <strong>run</strong> </a>
+    
+
+    
+  </span>
+  
+    <span class="note title not_defined_here">
+      included
+      from <span class='object_link'><a href="Runnable.html#run-instance_method" title="Concurrent::Runnable#run (method)">Runnable</a></span>
+    </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#run%21-instance_method" title="#run! (instance method)">- (Object) <strong>run!</strong>(abort_on_exception = false) </a>
+    
+
+    
+  </span>
+  
+    <span class="note title not_defined_here">
+      included
+      from <span class='object_link'><a href="Runnable.html#run%21-instance_method" title="Concurrent::Runnable#run! (method)">Runnable</a></span>
+    </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#running%3F-instance_method" title="#running? (instance method)">- (Boolean) <strong>running?</strong> </a>
+    
+
+    
+  </span>
+  
+    <span class="note title not_defined_here">
+      included
+      from <span class='object_link'><a href="Runnable.html#running%3F-instance_method" title="Concurrent::Runnable#running? (method)">Runnable</a></span>
+    </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#stop-instance_method" title="#stop (instance method)">- (Object) <strong>stop</strong> </a>
+    
+
+    
+  </span>
+  
+    <span class="note title not_defined_here">
+      included
+      from <span class='object_link'><a href="Runnable.html#stop-instance_method" title="Concurrent::Runnable#stop (method)">Runnable</a></span>
+    </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+    </ul>
+  
+
+
+  
+  
+  
+  
+  
+
+  <div id="class_method_details" class="method_details_list">
+    <h2>Class Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="pool-class_method">
+  
+    + (<tt>Array</tt>) <strong>pool</strong>(count, *args, &amp;block) 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    <div class="note deprecated"><strong>Deprecated.</strong> <div class='inline'><p>+Actor+ is being replaced with a completely new framework prior to v1.0.0</p>
+</div></div>
+<p>Create a pool of actors that share a common mailbox.</p>
+
+<p>Every +Actor+ instance operates on its own thread. When one thread isn&#39;t enough capacity
+to manage all the messages being sent to an +Actor+ a <em>pool</em> can be used instead. A pool
+is a collection of +Actor+ instances, all of the same type, that shate a message queue.
+Messages from other threads are all sent to a single queue against which all +Actor+s
+load balance.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <p class="tag_title">Examples:</p>
+    
+      
+      <pre class="example code"><code><span class='kw'>class</span> <span class='const'>EchoActor</span> <span class='op'>&lt;</span> <span class='const'>Concurrent</span><span class='op'>::</span><span class='const'>Actor</span>
+  <span class='kw'>def</span> <span class='id identifier rubyid_act'>act</span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_puts'>puts</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_message'>message</span><span class='embexpr_end'>}</span><span class='tstring_content'> handled by </span><span class='embexpr_beg'>#{</span><span class='kw'>self</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span>
+
+<span class='id identifier rubyid_mailbox'>mailbox</span><span class='comma'>,</span> <span class='id identifier rubyid_pool'>pool</span> <span class='op'>=</span> <span class='const'>EchoActor</span><span class='period'>.</span><span class='id identifier rubyid_pool'>pool</span><span class='lparen'>(</span><span class='int'>5</span><span class='rparen'>)</span>
+<span class='id identifier rubyid_pool'>pool</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span><span class='lbrace'>{</span><span class='op'>|</span><span class='id identifier rubyid_echo'>echo</span><span class='op'>|</span> <span class='id identifier rubyid_echo'>echo</span><span class='period'>.</span><span class='id identifier rubyid_run!'>run!</span> <span class='rbrace'>}</span>
+
+<span class='int'>10</span><span class='period'>.</span><span class='id identifier rubyid_times'>times</span><span class='lbrace'>{</span><span class='op'>|</span><span class='id identifier rubyid_i'>i</span><span class='op'>|</span> <span class='id identifier rubyid_mailbox'>mailbox</span><span class='period'>.</span><span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='id identifier rubyid_i'>i</span><span class='rparen'>)</span> <span class='rbrace'>}</span>
+<span class='comment'>#=&gt; [0] handled by #&lt;EchoActor:0x007fc8014fb8b8&gt;
+</span><span class='comment'>#=&gt; [1] handled by #&lt;EchoActor:0x007fc8014fb890&gt;
+</span><span class='comment'>#=&gt; [2] handled by #&lt;EchoActor:0x007fc8014fb868&gt;
+</span><span class='comment'>#=&gt; [3] handled by #&lt;EchoActor:0x007fc8014fb890&gt;
+</span><span class='comment'>#=&gt; [4] handled by #&lt;EchoActor:0x007fc8014fb840&gt;
+</span><span class='comment'>#=&gt; [5] handled by #&lt;EchoActor:0x007fc8014fb8b8&gt;
+</span><span class='comment'>#=&gt; [6] handled by #&lt;EchoActor:0x007fc8014fb8b8&gt;
+</span><span class='comment'>#=&gt; [7] handled by #&lt;EchoActor:0x007fc8014fb818&gt;
+</span><span class='comment'>#=&gt; [8] handled by #&lt;EchoActor:0x007fc8014fb890&gt;</span></code></pre>
+    
+  </div>
+<p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>count</span>
+      
+      
+        <span class='type'>(<tt>Integer</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the number of actors in the pool</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>args</span>
+      
+      
+        <span class='type'>(<tt>Array</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>zero or more arguments to pass to each actor in the pool</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Array</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>two-element array with the shared mailbox as the first element
+and an array of actors as the second element</p>
+</div>
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'></span>
+      
+      
+      
+        
+        <div class='inline'><p>ArgumentError if +count+ is zero or less</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/concurrent/actor/actor.rb', line 181</span>
+
+<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_pool'>pool</span><span class='lparen'>(</span><span class='id identifier rubyid_count'>count</span><span class='comma'>,</span> <span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_warn'>warn</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>[DEPRECATED] `Actor` is deprecated and will be replaced with `Actress`.</span><span class='tstring_end'>&#39;</span></span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'>ArgumentError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>count must be greater than zero</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span> <span class='kw'>unless</span> <span class='id identifier rubyid_count'>count</span> <span class='op'>&gt;</span> <span class='int'>0</span>
+  <span class='id identifier rubyid_mailbox'>mailbox</span> <span class='op'>=</span> <span class='const'>Queue</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
+  <span class='id identifier rubyid_actors'>actors</span> <span class='op'>=</span> <span class='id identifier rubyid_count'>count</span><span class='period'>.</span><span class='id identifier rubyid_times'>times</span><span class='period'>.</span><span class='id identifier rubyid_collect'>collect</span> <span class='kw'>do</span>
+    <span class='kw'>if</span> <span class='id identifier rubyid_block_given?'>block_given?</span>
+      <span class='id identifier rubyid_actor'>actor</span> <span class='op'>=</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='period'>.</span><span class='id identifier rubyid_dup'>dup</span><span class='rparen'>)</span>
+    <span class='kw'>else</span>
+      <span class='id identifier rubyid_actor'>actor</span> <span class='op'>=</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
+    <span class='kw'>end</span>
+    <span class='id identifier rubyid_actor'>actor</span><span class='period'>.</span><span class='id identifier rubyid_instance_variable_set'>instance_variable_set</span><span class='lparen'>(</span><span class='symbol'>:@queue</span><span class='comma'>,</span> <span class='id identifier rubyid_mailbox'>mailbox</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_actor'>actor</span>
+  <span class='kw'>end</span>
+  <span class='kw'>return</span> <span class='const'>Poolbox</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='id identifier rubyid_mailbox'>mailbox</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_actors'>actors</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+  <div id="instance_method_details" class="method_details_list">
+    <h2>Instance Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="<<-instance_method">
+  
+    - (<tt>Object</tt>) <strong>&lt;&lt;</strong>(message) 
+  
+
+  
+
+  
+    <span class="not_defined_here">
+      Originally defined in module
+        <span class='object_link'><a href="Postable.html#%3C%3C-instance_method" title="Concurrent::Postable#&lt;&lt; (method)">Postable</a></span>
+    </span>
+  
+</h3>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="act-instance_method">
+  
+    - (<tt>Object</tt>) <strong>act</strong>(*message) 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    <div class="note deprecated"><strong>Deprecated.</strong> <div class='inline'><p>+Actor+ is being replaced with a completely new framework prior to v1.0.0</p>
+</div></div>
+<p>Actors are defined by subclassing the +Concurrent::Actor+ class and overriding the</p>
+
+<h1>act method. The #act method can have any signature/arity but +def act(*args)+</h1>
+
+<p>is the most flexible and least error-prone signature. The #act method is called in
+response to a message being post to the +Actor+ instance (see <em>Behavior</em> below).</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>message</span>
+      
+      
+        <span class='type'>(<tt>Array</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>one or more arguments representing the message sent to the
+actor via one of the Concurrent::Postable methods</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Object</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>the result obtained when the message is successfully processed</p>
+</div>
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'></span>
+      
+      
+      
+        
+        <div class='inline'><p>NotImplementedError unless overridden in the +Actor+ subclass</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+214
+215
+216
+217</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/concurrent/actor/actor.rb', line 214</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_act'>act</span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_warn'>warn</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>[DEPRECATED] `Actor` is deprecated and will be replaced with `Actress`.</span><span class='tstring_end'>&#39;</span></span>
+  <span class='id identifier rubyid_raise'>raise</span> <span class='const'>NotImplementedError</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_class'>class</span><span class='embexpr_end'>}</span><span class='tstring_content'> does not implement #act</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="forward-instance_method">
+  
+    - (<tt>Object</tt>) <strong>forward</strong>(receiver, *message) 
+  
+
+  
+
+  
+    <span class="not_defined_here">
+      Originally defined in module
+        <span class='object_link'><a href="Postable.html#forward-instance_method" title="Concurrent::Postable#forward (method)">Postable</a></span>
+    </span>
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    <div class="note deprecated"><strong>Deprecated.</strong> <div class='inline'><p>+Actor+ is being replaced with a completely new framework prior to v1.0.0</p>
+</div></div>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>ArgumentError</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="mutex-instance_method">
+  
+    - (<tt>Object</tt>) <strong>mutex</strong>  <span class="extras">(protected)</span>
+  
+
+  
+
+  
+    <span class="not_defined_here">
+      Originally defined in module
+        <span class='object_link'><a href="Runnable.html#mutex-instance_method" title="Concurrent::Runnable#mutex (method)">Runnable</a></span>
+    </span>
+  
+</h3>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="post-instance_method">
+  
+    - (<tt>Object</tt>) <strong>post</strong>(*message) 
+  
+
+  
+
+  
+    <span class="not_defined_here">
+      Originally defined in module
+        <span class='object_link'><a href="Postable.html#post-instance_method" title="Concurrent::Postable#post (method)">Postable</a></span>
+    </span>
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    <p>Sends a message to and returns. It&#39;s a fire-and-forget interaction.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <div class="examples">
+    <p class="tag_title">Examples:</p>
+    
+      
+      <pre class="example code"><code><span class='kw'>class</span> <span class='const'>EchoActor</span> <span class='op'>&lt;</span> <span class='const'>Concurrent</span><span class='op'>::</span><span class='const'>Actor</span>
+  <span class='kw'>def</span> <span class='id identifier rubyid_act'>act</span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_p'>p</span> <span class='id identifier rubyid_message'>message</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span>
+
+<span class='id identifier rubyid_echo'>echo</span> <span class='op'>=</span> <span class='const'>EchoActor</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
+<span class='id identifier rubyid_echo'>echo</span><span class='period'>.</span><span class='id identifier rubyid_run!'>run!</span>
+
+<span class='id identifier rubyid_echo'>echo</span><span class='period'>.</span><span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Don&#39;t panic</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='comment'>#=&gt; true
+</span><span class='comment'>#=&gt; [&quot;Don&#39;t panic&quot;]
+</span>
+<span class='id identifier rubyid_echo'>echo</span><span class='period'>.</span><span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='int'>1</span><span class='comma'>,</span> <span class='int'>2</span><span class='comma'>,</span> <span class='int'>3</span><span class='comma'>,</span> <span class='int'>4</span><span class='comma'>,</span> <span class='int'>5</span><span class='rparen'>)</span> <span class='comment'>#=&gt; true
+</span><span class='comment'>#=&gt; [1, 2, 3, 4, 5]
+</span>
+<span class='id identifier rubyid_echo'>echo</span> <span class='op'>&lt;&lt;</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>There&#39;s a frood who really knows where his towel is.</span><span class='tstring_end'>&quot;</span></span> <span class='comment'>#=&gt; #&lt;EchoActor:0x007fc8012b8448...
+</span><span class='comment'>#=&gt; [&quot;There&#39;s a frood who really knows where his towel is.&quot;]</span></code></pre>
+    
+  </div>
+<p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>message</span>
+      
+      
+        <span class='type'>(<tt>Array</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>one or more arguments representing a single message
+to be sent to the receiver.</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Object</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'><p>false when the message cannot be queued else the number
+of messages in the queue <em>after</em> this message has been post</p>
+</div>
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'></span>
+      
+      
+      
+        
+        <div class='inline'><p>ArgumentError when the message is empty</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="post!-instance_method">
+  
+    - (<tt>Object</tt>) <strong>post!</strong>(seconds, *message) 
+  
+
+  
+
+  
+    <span class="not_defined_here">
+      Originally defined in module
+        <span class='object_link'><a href="Postable.html#post%21-instance_method" title="Concurrent::Postable#post! (method)">Postable</a></span>
+    </span>
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>ArgumentError</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="post?-instance_method">
+  
+    - (<tt>Boolean</tt>) <strong>post?</strong>(*message) 
+  
+
+  
+
+  
+    <span class="not_defined_here">
+      Originally defined in module
+        <span class='object_link'><a href="Postable.html#post%3F-instance_method" title="Concurrent::Postable#post? (method)">Postable</a></span>
+    </span>
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>ArgumentError</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="ready?-instance_method">
+  
+    - (<tt>Boolean</tt>) <strong>ready?</strong> 
+  
+
+  
+
+  
+    <span class="not_defined_here">
+      Originally defined in module
+        <span class='object_link'><a href="Postable.html#ready%3F-instance_method" title="Concurrent::Postable#ready? (method)">Postable</a></span>
+    </span>
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    <div class="note deprecated"><strong>Deprecated.</strong> <div class='inline'><p>+Actor+ is being replaced with a completely new framework prior to v1.0.0</p>
+</div></div>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="run-instance_method">
+  
+    - (<tt>Object</tt>) <strong>run</strong> 
+  
+
+  
+
+  
+    <span class="not_defined_here">
+      Originally defined in module
+        <span class='object_link'><a href="Runnable.html#run-instance_method" title="Concurrent::Runnable#run (method)">Runnable</a></span>
+    </span>
+  
+</h3>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="run!-instance_method">
+  
+    - (<tt>Object</tt>) <strong>run!</strong>(abort_on_exception = false) 
+  
+
+  
+
+  
+    <span class="not_defined_here">
+      Originally defined in module
+        <span class='object_link'><a href="Runnable.html#run%21-instance_method" title="Concurrent::Runnable#run! (method)">Runnable</a></span>
+    </span>
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Raises:</p>
+<ul class="raise">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Concurrent.html#LifecycleError-constant" title="Concurrent::LifecycleError (constant)">LifecycleError</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="running?-instance_method">
+  
+    - (<tt>Boolean</tt>) <strong>running?</strong> 
+  
+
+  
+
+  
+    <span class="not_defined_here">
+      Originally defined in module
+        <span class='object_link'><a href="Runnable.html#running%3F-instance_method" title="Concurrent::Runnable#running? (method)">Runnable</a></span>
+    </span>
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="stop-instance_method">
+  
+    - (<tt>Object</tt>) <strong>stop</strong> 
+  
+
+  
+
+  
+    <span class="not_defined_here">
+      Originally defined in module
+        <span class='object_link'><a href="Runnable.html#stop-instance_method" title="Concurrent::Runnable#stop (method)">Runnable</a></span>
+    </span>
+  
+</h3>
+</div>
+    
+  </div>
+
+</div>
+
+    <div id="footer">
+  Generated on Sat Jun 14 12:36:39 2014 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.8.7.4 (ruby-2.1.0).
+</div>
+
+<script>
+//  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+//    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+//      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+//  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+//
+//  ga('create', 'UA-4005004-8', 'pitr.ch');
+//  ga('send', 'pageview');
+</script>
+
+  </body>
+</html>
