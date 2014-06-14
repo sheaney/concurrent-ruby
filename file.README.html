@@ -63,7 +63,7 @@
 
     <div id="content"><div id='filecontents'><h1>Concurrent Ruby</h1>
 
-<p><a href="http://badge.fury.io/rb/concurrent-ruby"><img src="https://badge.fury.io/rb/concurrent-ruby.png" alt="Gem Version"></a> <a href="https://travis-ci.org/jdantonio/concurrent-ruby?branch=master"><img src="https://secure.travis-ci.org/jdantonio/concurrent-ruby.png" alt="Build Status"></a> <a href="https://coveralls.io/r/jdantonio/concurrent-ruby"><img src="https://coveralls.io/repos/jdantonio/concurrent-ruby/badge.png" alt="Coverage Status"></a> <a href="https://codeclimate.com/github/jdantonio/concurrent-ruby"><img src="https://codeclimate.com/github/jdantonio/concurrent-ruby.png" alt="Code Climate"></a> <a href="http://inch-pages.github.io/github/jdantonio/concurrent-ruby"><img src="http://inch-pages.github.io/github/jdantonio/concurrent-ruby.png" alt="Inline docs"></a> <a href="https://gemnasium.com/jdantonio/concurrent-ruby"><img src="https://gemnasium.com/jdantonio/concurrent-ruby.png" alt="Dependency Status"></a></p>
+<p><a href="http://badge.fury.io/rb/concurrent-ruby"><img src="https://badge.fury.io/rb/concurrent-ruby.png" alt="Gem Version"></a> <a href="https://travis-ci.org/ruby-concurrency/concurrent-ruby"><img src="https://travis-ci.org/ruby-concurrency/concurrent-ruby.svg?branch=master" alt="Build Status"></a> <a href="https://coveralls.io/r/ruby-concurrency/concurrent-ruby"><img src="https://coveralls.io/repos/ruby-concurrency/concurrent-ruby/badge.png" alt="Coverage Status"></a> <a href="https://codeclimate.com/github/ruby-concurrency/concurrent-ruby"><img src="https://codeclimate.com/github/ruby-concurrency/concurrent-ruby.png" alt="Code Climate"></a> <a href="http://inch-ci.org/github/ruby-concurrency/concurrent-ruby"><img src="http://inch-ci.org/github/ruby-concurrency/concurrent-ruby.png" alt="Inline docs"></a> <a href="https://gemnasium.com/ruby-concurrency/concurrent-ruby"><img src="https://gemnasium.com/ruby-concurrency/concurrent-ruby.png" alt="Dependency Status"></a></p>
 
 <table>
   <tr>
@@ -82,7 +82,7 @@
       <p>
         The design goals of this gem are:
         <ul>
-          <li>Be an 'unopinionted' toolbox that provides useful utilities without debating which is better or why</li>
+          <li>Be an 'unopinionated' toolbox that provides useful utilities without debating which is better or why</li>
           <li>Remain free of external gem dependencies</li>
           <li>Stay true to the spirit of the languages providing inspiration</li>
           <li>But implement in a way that makes sense for Ruby</li>
@@ -94,7 +94,7 @@
       </p>
     </td>
     <td align="right" valign="top">
-      <img src="https://raw.githubusercontent.com/wiki/jdantonio/concurrent-ruby/logo/concurrent-ruby-logo-300x300.png"/>
+      <img src="https://raw.githubusercontent.com/wiki/ruby-concurrency/concurrent-ruby/logo/concurrent-ruby-logo-300x300.png"/>
     </td>
   </tr>
 </table>
@@ -115,8 +115,8 @@
 
 <h2>Features &amp; Documentation</h2>
 
-<p>Please see the <a href="https://github.com/jdantonio/concurrent-ruby/wiki">Concurrent Ruby Wiki</a>
-or the <a href="http://ruby-concurrency.github.io/concurrent-ruby/frames.html">API documentation</a>
+<p>Please see the <a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki">Concurrent Ruby Wiki</a>
+or the <a href="http://ruby-concurrency.github.io/concurrent-ruby/frames.html">API documentation</a>)
 for more information or join our <a href="http://groups.google.com/group/concurrent-ruby">mailing list</a>.</p>
 
 <p>There are many concurrency abstractions in this library. These abstractions can be broadly categorized
@@ -124,21 +124,21 @@ into several general groups:</p>
 
 <ul>
 <li>Asynchronous concurrency abstractions including
-<a href="https://github.com/jdantonio/concurrent-ruby/wiki/Async">Async</a>,
-<a href="https://github.com/jdantonio/concurrent-ruby/wiki/Agent">Agent</a>,
-<a href="https://github.com/jdantonio/concurrent-ruby/wiki/Future">Future</a>,
-<a href="https://github.com/jdantonio/concurrent-ruby/wiki/Promise">Promise</a>,
-<a href="https://github.com/jdantonio/concurrent-ruby/wiki/ScheduledTask">ScheduledTask</a>,
-and <a href="https://github.com/jdantonio/concurrent-ruby/wiki/TimerTask">TimerTask</a> </li>
-<li>Erlang-inspired <a href="https://github.com/jdantonio/concurrent-ruby/wiki/Supervisor">Supervisor</a> and other lifecycle classes/mixins
+<a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/Async">Async</a>,
+<a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/Agent">Agent</a>,
+<a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/Future">Future</a>,
+<a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/Promise">Promise</a>,
+<a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/ScheduledTask">ScheduledTask</a>,
+and <a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/TimerTask">TimerTask</a> </li>
+<li>Erlang-inspired <a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/Supervisor">Supervisor</a> and other lifecycle classes/mixins
 for managing long-running threads</li>
-<li>Thread-safe variables including <a href="https://github.com/jdantonio/concurrent-ruby/wiki/MVar-(M-Structure)">M-Structures</a>,
-<a href="https://github.com/jdantonio/concurrent-ruby/wiki/IVar-(I-Structure)">I-Structures</a>,
-<a href="https://github.com/jdantonio/concurrent-ruby/wiki/ThreadLocalVar">thread-local variables</a>,
-atomic counters, and <a href="https://github.com/jdantonio/concurrent-ruby/wiki/TVar-(STM)">software transactional memory</a></li>
-<li>Thread synchronization classes and algorithms including <a href="https://github.com/jdantonio/concurrent-ruby/wiki/Dataflow">dataflow</a>, 
+<li>Thread-safe variables including <a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/MVar-(M-Structure)">M-Structures</a>,
+<a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/IVar-(I-Structure)">I-Structures</a>,
+<a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/ThreadLocalVar">thread-local variables</a>,
+atomic counters, and <a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/TVar-(STM)">software transactional memory</a></li>
+<li>Thread synchronization classes and algorithms including <a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/Dataflow">dataflow</a>, 
 timeout, condition, countdown latch, dependency counter, and event</li>
-<li>Java-inspired <a href="https://github.com/jdantonio/concurrent-ruby/wiki/Thread%20Pools">thread pools</a></li>
+<li>Java-inspired <a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/Thread%20Pools">thread pools</a></li>
 <li>New fast light-weighted <a href="http://rubydoc.info/gems/concurrent-ruby/Concurrent/Actress">Actor model</a> implementation. </li>
 <li>And many more...</li>
 </ul>
@@ -207,6 +207,7 @@ This one simple example shows some of the power of this gem.</p>
 <li><a href="https://github.com/brainopia">Ravil Bayramgalin</a></li>
 <li><a href="https://github.com/larrylv">Larry Lv</a></li>
 <li><a href="https://github.com/gcapizzi">Giuseppe Capizzi</a></li>
+<li><a href="https://github.com/billdueber">Bill Dueber</a></li>
 <li><a href="https://github.com/brixen">Brian Shirai</a></li>
 <li><a href="https://github.com/chip-miller">Chip Miller</a></li>
 <li><a href="https://github.com/jamiehodge">Jamie Hodge</a></li>
@@ -227,13 +228,13 @@ This one simple example shows some of the power of this gem.</p>
 
 <p><em>Concurrent Ruby</em> is free software released under the <a href="http://www.opensource.org/licenses/MIT">MIT License</a>.</p>
 
-<p>The <em>Concurrent Ruby</em> <a href="https://github.com/jdantonio/concurrent-ruby/wiki/Logo">logo</a>
+<p>The <em>Concurrent Ruby</em> <a href="https://github.com/ruby-concurrency/concurrent-ruby/wiki/Logo">logo</a>
 was designed by <a href="https://twitter.com/zombyboy">David Jones</a>.
 It is Copyright &copy; 2014 <a href="https://twitter.com/jerrydantonio">Jerry D&#39;Antonio</a>. All Rights Reserved.</p>
 </div></div>
 
     <div id="footer">
-  Generated on Sat Jun 14 12:51:05 2014 by
+  Generated on Sat Jun 14 13:01:51 2014 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.8.7.4 (ruby-2.1.0).
 </div>

@@ -400,6 +400,29 @@ time. Tasks are run on the global task pool or on the supplied executor.</p>
 </li>
 
       
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#kill-instance_method" title="#kill (instance method)">- (Object) <strong>kill</strong> </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'><p>For a timer, #kill is like an orderly shutdown, except we need to manually (and destructively) clear the queue first.</p>
+</div></span>
+  
+</li>
+
+      
         <li class="protected ">
   <span class="summary_signature">
     
@@ -938,18 +961,18 @@ to schedule the task for execution</p>
       <pre class="lines">
 
 
-79
-80
-81
-82
-83
 84
 85
 86
-87</pre>
+87
+88
+89
+90
+91
+92</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/concurrent/executor/timer_set.rb', line 79</span>
+      <pre class="code"><span class="info file"># File 'lib/concurrent/executor/timer_set.rb', line 84</span>
 
 <span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_calculate_schedule_time'>calculate_schedule_time</span><span class='lparen'>(</span><span class='id identifier rubyid_intended_time'>intended_time</span><span class='comma'>,</span> <span class='id identifier rubyid_now'>now</span> <span class='op'>=</span> <span class='const'>Time</span><span class='period'>.</span><span class='id identifier rubyid_now'>now</span><span class='rparen'>)</span>
   <span class='kw'>if</span> <span class='id identifier rubyid_intended_time'>intended_time</span><span class='period'>.</span><span class='id identifier rubyid_is_a?'>is_a?</span><span class='lparen'>(</span><span class='const'>Time</span><span class='rparen'>)</span>
@@ -1127,6 +1150,49 @@ to schedule the task for execution</p>
     </span>
   
 </h3>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="kill-instance_method">
+  
+    - (<tt>Object</tt>) <strong>kill</strong> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    <p>For a timer, #kill is like an orderly shutdown, except we need to manually
+(and destructively) clear the queue first</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+66
+67
+68
+69</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/concurrent/executor/timer_set.rb', line 66</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_kill'>kill</span>
+  <span class='ivar'>@queue</span><span class='period'>.</span><span class='id identifier rubyid_clear'>clear</span>
+  <span class='id identifier rubyid_shutdown'>shutdown</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
 </div>
     
       <div class="method_details ">
@@ -1637,7 +1703,7 @@ passed.</p>
 </div>
 
     <div id="footer">
-  Generated on Sat Jun 14 12:51:11 2014 by
+  Generated on Sat Jun 14 13:01:57 2014 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.8.7.4 (ruby-2.1.0).
 </div>
