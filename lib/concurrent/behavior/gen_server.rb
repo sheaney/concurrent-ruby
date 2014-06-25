@@ -1,3 +1,5 @@
+require 'concurrent/ivar'
+require 'concurrent/executor/serialized_execution'
 require 'concurrent/executor/single_thread_executor'
 
 module Concurrent
@@ -69,7 +71,7 @@ module Concurrent
         define_method(method) do
           return true unless @executor.running?
           result = @executor.send(method)
-          @server.terminate
+          @server.terminate(@state, method)
           result
         end
       end
@@ -138,6 +140,13 @@ module CounterServer
   end
 
   def terminate(state, reason)
+    print "terminate: #{state}, #{reason}\n"
     nil
   end
 end
+
+#require 'concurrent'
+#counter = CounterServer.start
+#counter.cast(1).cast(2).cast(3)
+#counter.call(0).value #=> 6
+#counter.shutdown
